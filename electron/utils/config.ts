@@ -85,6 +85,11 @@ export const CWW_CONFIG = {
   get SKILL_STORE_URL(): string {
     return process.env.VITE_CWW_SKILL_STORE_URL || '';
   },
+
+  /** 阿里云 OpenSearch 等集成凭证接口路径（拼接在 API_BASE_URL 之后） */
+  get CREDENTIALS_PATH(): string {
+    return process.env.VITE_CWW_CREDENTIALS_PATH || '/integrations/credentials';
+  },
 };
 
 /**
