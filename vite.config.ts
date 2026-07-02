@@ -49,62 +49,62 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_CWW');
 
   return {
-  // Required for Electron: all asset URLs must be relative because the renderer
-  // loads via file:// in production. vite-plugin-electron-renderer sets this
-  // automatically, but we declare it explicitly so the intent is clear and the
-  // build remains correct even if plugin order ever changes.
-  base: './',
-  plugins: [
-    react(),
-    electron([
-      {
-        // Main process entry file
-        entry: 'electron/main/index.ts',
-        onstart(options) {
-          options.startup();
-        },
-        vite: {
-          resolve: { alias },
-          define: Object.fromEntries(
-            Object.entries(env).map(([k, v]) => [`process.env.${k}`, JSON.stringify(v)])
-          ),
-          build: {
-            outDir: 'dist-electron/main',
-            rollupOptions: {
-              external: isMainProcessExternal,
+    // Required for Electron: all asset URLs must be relative because the renderer
+    // loads via file:// in production. vite-plugin-electron-renderer sets this
+    // automatically, but we declare it explicitly so the intent is clear and the
+    // build remains correct even if plugin order ever changes.
+    base: './',
+    plugins: [
+      react(),
+      electron([
+        {
+          // Main process entry file
+          entry: 'electron/main/index.ts',
+          onstart(options) {
+            options.startup();
+          },
+          vite: {
+            resolve: { alias },
+            define: Object.fromEntries(
+              Object.entries(env).map(([k, v]) => [`process.env.${k}`, JSON.stringify(v)])
+            ),
+            build: {
+              outDir: 'dist-electron/main',
+              rollupOptions: {
+                external: isMainProcessExternal,
+              },
             },
           },
         },
-      },
-      {
-        // Preload scripts entry file
-        entry: 'electron/preload/index.ts',
-        onstart(options) {
-          options.reload();
-        },
-        vite: {
-          resolve: { alias },
-          build: {
-            outDir: 'dist-electron/preload',
-            rollupOptions: {
-              external: ['electron'],
+        {
+          // Preload scripts entry file
+          entry: 'electron/preload/index.ts',
+          onstart(options) {
+            options.reload();
+          },
+          vite: {
+            resolve: { alias },
+            build: {
+              outDir: 'dist-electron/preload',
+              rollupOptions: {
+                external: ['electron'],
+              },
             },
           },
         },
-      },
-    ]),
-    renderer(),
-  ],
-  resolve: {
-    alias,
-    dedupe: ['react', 'react-dom', 'react-i18next', 'zustand', 'sonner', 'lucide-react'],
-  },
-  server: {
-    port: 5173,
-  },
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-  },
-}};
+      ]),
+      renderer(),
+    ],
+    resolve: {
+      alias,
+      dedupe: ['react', 'react-dom', 'react-i18next', 'zustand', 'sonner', 'lucide-react'],
+    },
+    server: {
+      port: 5173,
+    },
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
+    },
+  };
 });
