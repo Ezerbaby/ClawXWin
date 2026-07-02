@@ -33,7 +33,7 @@ export function QRCodeLogin() {
   };
 
   return (
-    <div className="flex items-center justify-center w-full h-full min-h-[400px]">
+    <div className="flex items-center justify-center w-full h-full">
       <div
         className={cn(
           'flex flex-col items-center gap-6 w-full max-w-sm',

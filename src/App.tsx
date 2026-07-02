@@ -30,6 +30,7 @@ import { useNewChatAction } from './components/layout/use-new-chat-action';
 import { hostEvents } from './lib/host-events';
 import { useCwwAuthStore } from './stores/cww-auth';
 import { QRCodeLogin } from './components/cww/QRCodeLogin';
+import { TitleBar } from './components/layout/TitleBar';
 
 
 /**
@@ -204,8 +205,12 @@ function App() {
       <TooltipProvider delayDuration={300}>
         {/* 必须登录才能使用，未登录始终显示扫码登录 */}
         {!cwwInitializing && !cwwLoggedIn ? (
-          <div className="flex items-center justify-center h-screen bg-background">
-            <QRCodeLogin />
+          <div className="flex flex-col h-screen bg-background">
+            {/* 登录页标题栏：提供窗口拖动和关闭/最小化/最大化按钮 */}
+            <TitleBar />
+            <div className="flex items-center justify-center flex-1">
+              <QRCodeLogin />
+            </div>
           </div>
         ) : setupComplete || skipSetupForE2E ? (
         <Routes>
