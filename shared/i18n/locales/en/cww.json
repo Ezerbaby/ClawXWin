@@ -1,7 +1,7 @@
 {
   "auth": {
-    "title": "Scan to Login",
-    "subtitle": "Open LunanQianyi App to scan",
+    "title": "鲁南千易",
+    "subtitle": "Please scan with YunShang LuNan to login",
     "loading": "Loading QR code...",
     "scanned": "Scanned! Waiting for confirmation...",
     "expired": "QR code expired, click to refresh",

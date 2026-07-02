@@ -1,7 +1,7 @@
 {
   "auth": {
-    "title": "扫码登录",
-    "subtitle": "请使用鲁南千易 App 扫码",
+    "title": "鲁南千易",
+    "subtitle": "请使用云上鲁南扫码登录",
     "loading": "正在加载二维码...",
     "scanned": "已扫码，等待确认...",
     "expired": "二维码已过期，点击刷新",
