@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import renderer from 'vite-plugin-electron-renderer';
@@ -44,7 +44,11 @@ function isMainProcessExternal(id: string): boolean {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // 加载 .env 文件中的环境变量，注入到 Main 进程构建中
+  const env = loadEnv(mode, process.cwd(), 'VITE_CWW');
+
+  return {
   // Required for Electron: all asset URLs must be relative because the renderer
   // loads via file:// in production. vite-plugin-electron-renderer sets this
   // automatically, but we declare it explicitly so the intent is clear and the
@@ -61,6 +65,9 @@ export default defineConfig({
         },
         vite: {
           resolve: { alias },
+          define: Object.fromEntries(
+            Object.entries(env).map(([k, v]) => [`process.env.${k}`, JSON.stringify(v)])
+          ),
           build: {
             outDir: 'dist-electron/main',
             rollupOptions: {
@@ -99,4 +106,5 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
   },
+}};
 });
