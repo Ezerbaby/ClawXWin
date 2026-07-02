@@ -1,33 +1,33 @@
 {
   "auth": {
     "title": "鲁南千易",
-    "subtitle": "Please scan with YunShang LuNan to login",
-    "loading": "Loading QR code...",
-    "scanned": "Scanned! Waiting for confirmation...",
-    "expired": "QR code expired, click to refresh",
-    "error": "Failed to get QR code",
-    "logout": "Logout",
-    "loggedIn": "Logged in as {{nickname}}"
+    "subtitle": "请使用云上鲁南扫码登录",
+    "loading": "正在加载二维码...",
+    "scanned": "已扫码，等待确认...",
+    "expired": "二维码已过期，点击刷新",
+    "error": "获取二维码失败",
+    "logout": "退出登录",
+    "loggedIn": "已登录：{{nickname}}"
   },
   "telemetry": {
     "eventName": {
-      "user_message_sent": "User message sent",
-      "chat_send_ack": "Chat acknowledged",
-      "assistant_message_rendered": "Assistant response rendered",
-      "chat_abort_requested": "Chat abort requested",
-      "chat_abort_result": "Chat abort result",
-      "stream_idle_fallback_triggered": "Stream idle fallback"
+      "user_message_sent": "用户发送消息",
+      "chat_send_ack": "聊天确认",
+      "assistant_message_rendered": "助手响应渲染完成",
+      "chat_abort_requested": "请求中断",
+      "chat_abort_result": "中断结果",
+      "stream_idle_fallback_triggered": "流式超时兜底"
     }
   },
   "welcome": {
-    "defaultTitle": "How can I help you today?",
-    "tabAll": "All"
+    "defaultTitle": "有什么可以帮你的？",
+    "tabAll": "全部"
   },
   "widget": {
-    "title": "Assistant",
-    "placeholder": "Ask me anything...",
-    "openMain": "Open main window",
-    "close": "Close widget",
-    "processing": "Thinking..."
+    "title": "助手",
+    "placeholder": "问我任何问题...",
+    "openMain": "打开主窗口",
+    "close": "关闭小部件",
+    "processing": "思考中..."
   }
 }

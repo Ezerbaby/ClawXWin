@@ -58,6 +58,8 @@ tests/fixtures/transcripts/
 *.rpm
 
 resources/bin
+# 保留 download 目录（uv/agent-browser 离线安装包）
+!resources/download/
 
 # Secrets
 *.p12
