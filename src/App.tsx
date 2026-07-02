@@ -28,6 +28,8 @@ import { loadExternalRendererExtensions } from './extensions/_ext-bridge.generat
 import { UpdateNotifier } from './components/update/UpdateNotifier';
 import { useNewChatAction } from './components/layout/use-new-chat-action';
 import { hostEvents } from './lib/host-events';
+import { useCwwAuthStore } from './stores/cww-auth';
+import { QRCodeLogin } from './components/cww/QRCodeLogin';
 
 
 /**
@@ -108,6 +110,12 @@ function App() {
   const initUpdate = useUpdateStore((state) => state.init);
   const initProviders = useProviderStore((state) => state.init);
   const handleNewChat = useNewChatAction();
+  const cwwLoggedIn = useCwwAuthStore((state) => state.loggedIn);
+  const cwwInitializing = useCwwAuthStore((state) => state.initializing);
+  const cwwRestore = useCwwAuthStore((state) => state.restore);
+
+  /** 是否需要 CWW 登录（配置了 API 但未登录） */
+  const needCwwLogin = !cwwInitializing && !cwwLoggedIn;
 
   useEffect(() => {
     let cancelled = false;
@@ -118,10 +126,13 @@ function App() {
       }
     });
 
+    // 冷启动恢复 CWW 登录态
+    cwwRestore();
+
     return () => {
       cancelled = true;
     };
-  }, [initSettings, initUpdate]);
+  }, [initSettings, initUpdate, cwwRestore]);
 
   // Sync i18n language with persisted settings on mount
   useEffect(() => {
@@ -198,6 +209,12 @@ function App() {
   return (
     <ErrorBoundary>
       <TooltipProvider delayDuration={300}>
+        {/* CWW 未登录时显示扫码登录界面 */}
+        {setupComplete && needCwwLogin ? (
+          <div className="flex items-center justify-center h-screen bg-background">
+            <QRCodeLogin />
+          </div>
+        ) : (
         <Routes>
           {/* Setup wizard (shown on first launch) */}
           <Route path="/setup/*" element={<Setup />} />
@@ -218,6 +235,7 @@ function App() {
             ))}
           </Route>
         </Routes>
+        )}
 
         <UpdateNotifier />
 
