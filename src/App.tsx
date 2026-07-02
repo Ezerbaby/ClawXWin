@@ -151,13 +151,6 @@ function App() {
     initProviders();
   }, [initProviders]);
 
-  // Redirect to setup wizard if not complete
-  useEffect(() => {
-    if (!setupComplete && !skipSetupForE2E && !location.pathname.startsWith('/setup')) {
-      navigate('/setup');
-    }
-  }, [setupComplete, skipSetupForE2E, location.pathname, navigate]);
-
   // Listen for navigation events from main process
   useEffect(() => {
     const unsubscribe = hostEvents.onNavigate((path) => {
@@ -209,12 +202,12 @@ function App() {
   return (
     <ErrorBoundary>
       <TooltipProvider delayDuration={300}>
-        {/* CWW 未登录时显示扫码登录界面 */}
-        {setupComplete && needCwwLogin ? (
+        {/* 必须登录才能使用，未登录始终显示扫码登录 */}
+        {!cwwInitializing && !cwwLoggedIn ? (
           <div className="flex items-center justify-center h-screen bg-background">
             <QRCodeLogin />
           </div>
-        ) : (
+        ) : setupComplete || skipSetupForE2E ? (
         <Routes>
           {/* Setup wizard (shown on first launch) */}
           <Route path="/setup/*" element={<Setup />} />
@@ -234,6 +227,11 @@ function App() {
               <Route key={r.path} path={r.path} element={<r.component />} />
             ))}
           </Route>
+        </Routes>
+        ) : (
+        <Routes>
+          <Route path="/setup/*" element={<Setup />} />
+          <Route path="*" element={<Navigate to="/setup" replace />} />
         </Routes>
         )}
 
