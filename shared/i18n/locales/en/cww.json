@@ -1,0 +1,33 @@
+{
+  "auth": {
+    "title": "Scan to Login",
+    "subtitle": "Open LunanQianyi App to scan",
+    "loading": "Loading QR code...",
+    "scanned": "Scanned! Waiting for confirmation...",
+    "expired": "QR code expired, click to refresh",
+    "error": "Failed to get QR code",
+    "logout": "Logout",
+    "loggedIn": "Logged in as {{nickname}}"
+  },
+  "telemetry": {
+    "eventName": {
+      "user_message_sent": "User message sent",
+      "chat_send_ack": "Chat acknowledged",
+      "assistant_message_rendered": "Assistant response rendered",
+      "chat_abort_requested": "Chat abort requested",
+      "chat_abort_result": "Chat abort result",
+      "stream_idle_fallback_triggered": "Stream idle fallback"
+    }
+  },
+  "welcome": {
+    "defaultTitle": "How can I help you today?",
+    "tabAll": "All"
+  },
+  "widget": {
+    "title": "Assistant",
+    "placeholder": "Ask me anything...",
+    "openMain": "Open main window",
+    "close": "Close widget",
+    "processing": "Thinking..."
+  }
+}

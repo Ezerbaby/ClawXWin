@@ -36,9 +36,10 @@ interface SetupStep {
 
 const STEP = {
   WELCOME: 0,
-  RUNTIME: 1,
-  INSTALLING: 2,
-  COMPLETE: 3,
+  WORKSPACE: 1,
+  RUNTIME: 2,
+  INSTALLING: 3,
+  COMPLETE: 4,
 } as const;
 
 const getSteps = (t: TFunction): SetupStep[] => [
@@ -46,6 +47,11 @@ const getSteps = (t: TFunction): SetupStep[] => [
     id: 'welcome',
     title: t('steps.welcome.title'),
     description: t('steps.welcome.description'),
+  },
+  {
+    id: 'workspace',
+    title: t('steps.workspace.title'),
+    description: t('steps.workspace.description'),
   },
   {
     id: 'runtime',
@@ -110,6 +116,8 @@ export function Setup() {
     switch (safeStepIndex) {
       case STEP.WELCOME:
         return true;
+      case STEP.WORKSPACE:
+        return true; // 工作区路径可选，直接下一步
       case STEP.RUNTIME:
         return runtimeChecksPassed;
       case STEP.INSTALLING:
@@ -206,6 +214,7 @@ export function Setup() {
             {/* Step-specific content */}
             <div className="rounded-xl bg-card text-card-foreground border shadow-sm p-8 mb-8">
               {safeStepIndex === STEP.WELCOME && <WelcomeContent />}
+              {safeStepIndex === STEP.WORKSPACE && <WorkspaceContent />}
               {safeStepIndex === STEP.RUNTIME && <RuntimeContent onStatusChange={setRuntimeChecksPassed} />}
               {safeStepIndex === STEP.INSTALLING && (
                 <InstallingContent
@@ -259,6 +268,57 @@ export function Setup() {
 }
 
 // ==================== Step Content Components ====================
+
+/** 工作区选择步骤 */
+function WorkspaceContent() {
+  const { t } = useTranslation('setup');
+  const [workspacePath, setWorkspacePath] = useState('');
+  const [isSelecting, setIsSelecting] = useState(false);
+
+  /** 选择文件夹 */
+  const handleBrowse = async () => {
+    setIsSelecting(true);
+    try {
+      const result = await hostApi.dialog.open({
+        title: t('workspace.selectTitle'),
+        properties: ['openDirectory', 'createDirectory'],
+      });
+      if (result && !result.canceled && result.filePaths.length > 0) {
+        const selectedPath = result.filePaths[0];
+        setWorkspacePath(selectedPath);
+        // 保存工作区路径到设置
+        await hostApi.settings.set('workspace', selectedPath);
+      }
+    } catch {
+      // 用户取消或出错，忽略
+    } finally {
+      setIsSelecting(false);
+    }
+  };
+
+  return (
+    <div data-testid="setup-workspace-step" className="space-y-4">
+      <h2 className="text-xl font-serif font-normal tracking-tight">{t('workspace.title')}</h2>
+      <p className="text-muted-foreground">{t('workspace.description')}</p>
+
+      {/* 工作区路径输入 */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={workspacePath}
+          onChange={(e) => setWorkspacePath(e.target.value)}
+          placeholder={t('workspace.placeholder')}
+          className="flex-1 rounded-md border bg-surface-input px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+        />
+        <Button variant="outline" onClick={handleBrowse} disabled={isSelecting}>
+          {isSelecting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('workspace.browse')}
+        </Button>
+      </div>
+
+      <p className="text-xs text-muted-foreground">{t('workspace.hint')}</p>
+    </div>
+  );
+}
 
 function WelcomeContent() {
   const { t } = useTranslation(['setup', 'settings']);

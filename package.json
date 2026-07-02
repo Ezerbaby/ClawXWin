@@ -63,6 +63,7 @@
         "agent-browser:download:win": "zx scripts/download-bundled-agent-browser.mjs --platform=win",
         "agent-browser:download:linux": "zx scripts/download-bundled-agent-browser.mjs --platform=linux",
         "agent-browser:download:all": "zx scripts/download-bundled-agent-browser.mjs --all",
+        "sync:extensions": "node scripts/sync-custom-extensions.mjs",
         "node:download:win": "zx scripts/download-bundled-node.mjs --platform=win",
         "prep:win-binaries": "pnpm run uv:download:win && pnpm run agent-browser:download:win && pnpm run node:download:win",
         "icons": "zx scripts/generate-icons.mjs",

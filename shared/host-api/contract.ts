@@ -87,7 +87,7 @@ export type UpdateProgressSnapshot = {
   bytesPerSecond: number;
 };
 export type UpdateStatusSnapshot = {
-  status: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
+  status: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error' | 'force-update';
   info?: UpdateInfoSnapshot;
   progress?: UpdateProgressSnapshot;
   error?: string;
@@ -667,6 +667,128 @@ export type DeliveryChannelGroup = {
 };
 export type DeliveryTargetsResult = HostSuccess & { targets: DeliveryChannelGroup[] };
 
+// ==================== CWW 认证类型 ====================
+
+/** 二维码登录响应 */
+export type CwwQRCodeResponse = {
+  qrcode: string;
+  img: string;
+};
+
+/** 二维码扫码状态轮询响应 */
+export type CwwQRCodeStatus = {
+  /** 1002=已扫码待确认, 1003=已确认并返回 token, 1005=已过期 */
+  code: number;
+  access_token?: string;
+  auth_type?: string;
+  user?: { id: number | string; nickname?: string; avatar?: string };
+  model_config?: CwwModelConfig;
+};
+
+/** /auth/me 会话响应 */
+export type CwwMeSessionResult = {
+  ok: boolean;
+  unauthorized?: boolean;
+  user?: { id: number | string; nickname?: string; avatar?: string };
+  modelConfig?: CwwModelConfig | null;
+  message?: string;
+};
+
+/** CWW 下发的模型配置 */
+export type CwwModelConfig = {
+  provider?: string;
+  model_id?: string;
+  model_name?: string;
+  base_url?: string;
+  api_key?: string;
+  api_format?: string;
+};
+
+/** CWW 认证状态快照 */
+export type CwwAuthStatusSnapshot = {
+  loggedIn: boolean;
+  user?: { id: number | string; nickname?: string; avatar?: string };
+  modelConfig?: CwwModelConfig | null;
+};
+
+// ==================== CWW 遥测类型 ====================
+
+/** CWW 遥测事件载荷 */
+export type CwwTelemetryEventPayload = {
+  event_name: string;
+  event_time?: string;
+  user_id?: number | string | null;
+  session_id?: string | null;
+  run_id?: string | null;
+  status?: string | null;
+  content?: string | null;
+  attachments?: Array<{ file_name: string; file_type: string; mime_type?: string }>;
+  payload?: Record<string, unknown> | null;
+  error_message?: string | null;
+};
+
+// ==================== CWW 欢迎页类型 ====================
+
+/** 欢迎页 Tab */
+export type CwwWelcomeTab = {
+  id: number;
+  tab_name: string;
+  sort_order: number;
+  status: number;
+  cards: CwwWelcomeCard[];
+};
+
+/** 欢迎页 Card */
+export type CwwWelcomeCard = {
+  id: number;
+  tab_id: number;
+  title: string;
+  content: string;
+  prompt: string;
+  sort_order: number;
+  status: number;
+};
+
+// ==================== CWW SkillHub 类型 ====================
+
+/** SkillHub 技能搜索参数 */
+export type CwwSkillHubSearchPayload = {
+  q?: string;
+  page?: number;
+  size?: number;
+};
+
+/** SkillHub 技能列表项 */
+export type CwwSkillHubSkillItem = {
+  id: number;
+  slug: string;
+  displayName: string;
+  summary?: string;
+  status?: string;
+  namespace?: string;
+  downloadCount?: number;
+};
+
+/** SkillHub 搜索/列表结果 */
+export type CwwSkillHubListResult = HostSuccess & {
+  items?: CwwSkillHubSkillItem[];
+  total?: number;
+  page?: number;
+  size?: number;
+};
+
+/** SkillHub 安装参数 */
+export type CwwSkillHubInstallPayload = {
+  namespace: string;
+  slug: string;
+  displayName?: string;
+};
+
+// ==================== Widget 类型 ====================
+
+/** Widget 可见性状态 */
+export type WidgetVisibilityResult = { visible: boolean };
+
 export type HostApiContract = {
   app: {
     openClawDoctor: (payload: OpenClawDoctorPayload) => Omit<OpenClawDoctorResult, 'mode'>;
@@ -701,6 +823,7 @@ export type HostApiContract = {
     setChannel: (payload: UpdateSetChannelPayload) => HostSuccess;
     setAutoDownload: (payload: UpdateSetAutoDownloadPayload) => HostSuccess;
     cancelAutoInstall: () => HostSuccess;
+    cancelDownload: () => HostSuccess;
   };
   uv: {
     installAll: () => HostSuccess;
@@ -843,6 +966,40 @@ export type HostApiContract = {
   };
   usage: {
     recentTokenHistory: (payload?: UsageHistoryPayload) => UsageHistoryEntry[];
+  };
+  /** 鲁南千易扫码认证 */
+  cwwAuth: {
+    /** 获取登录二维码 */
+    getQRCode: () => CwwQRCodeResponse;
+    /** 轮询二维码扫码状态 */
+    checkQRCode: (payload: { key: string }) => CwwQRCodeStatus;
+    /** 获取当前认证状态（冷启动恢复） */
+    getAuthStatus: () => CwwAuthStatusSnapshot;
+    /** 退出登录 */
+    logout: () => HostSuccess;
+  };
+  /** 鲁南千易遥测上报 */
+  cwwTelemetry: {
+    /** 发送遥测事件（fire-and-forget） */
+    sendEvent: (payload: CwwTelemetryEventPayload) => HostSuccess;
+  };
+  /** 鲁南千易欢迎页模板 */
+  cwwWelcome: {
+    /** 获取欢迎页 Tab + Card 数据 */
+    fetchTabs: () => HostSuccess & { tabs?: CwwWelcomeTab[] };
+  };
+  /** 桌面悬浮小部件 */
+  widget: {
+    /** 显示小部件 */
+    show: () => HostSuccess;
+    /** 隐藏小部件 */
+    hide: () => HostSuccess;
+    /** 切换小部件可见性 */
+    toggle: () => HostSuccess;
+    /** 查询可见性 */
+    isVisible: () => WidgetVisibilityResult;
+    /** 从小部件发送消息到主窗口 */
+    sendMessage: (payload: { message: string }) => HostSuccess;
   };
 };
 

@@ -67,6 +67,27 @@ export const UPDATE_CONFIG = {
 };
 
 /**
+ * CWW（鲁南千易）后端 API 配置
+ * 从环境变量读取，支持 .env 文件配置
+ */
+export const CWW_CONFIG = {
+  /** CWW 后端 API 基础地址（认证/遥测/欢迎页/模型配置） */
+  get API_BASE_URL(): string {
+    return process.env.VITE_CWW_API_BASE_URL || '';
+  },
+
+  /** CWW 版本检查与更新下载服务地址 */
+  get UPDATE_SERVER_URL(): string {
+    return process.env.VITE_CWW_UPDATE_SERVER_URL || '';
+  },
+
+  /** CWW SkillHub 技能商城服务地址 */
+  get SKILL_STORE_URL(): string {
+    return process.env.VITE_CWW_SKILL_STORE_URL || '';
+  },
+};
+
+/**
  * Gateway configuration
  */
 export const GATEWAY_CONFIG = {

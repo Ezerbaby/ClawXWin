@@ -18,6 +18,9 @@ function fsPath(filePath: string): string {
 import { getAllSettings } from '../utils/store';
 import { getApiKey, getDefaultProvider, getProvider } from '../utils/secure-storage';
 import { getProviderEnvVar, getKeyableProviderTypes } from '../utils/provider-registry';
+import { CWW_CONFIG } from '../utils/config';
+import { getCwwToken, getCwwModelConfig } from '../services/cww-auth-api';
+import { mapModelConfigToEnv, setCachedModelConfig } from '../utils/cww-model-config';
 import {
   getOpenClawConfigDir,
   getOpenClawDir,
@@ -588,6 +591,41 @@ async function loadProviderEnv(): Promise<{ providerEnv: Record<string, string>;
   return { providerEnv, loadedProviderKeyCount };
 }
 
+/**
+ * 加载 CWW（鲁南千易）环境变量
+ * 包括模型配置和 access token
+ * 优先级：用户手动 API Key（已在 providerEnv 中）> CWW model_config > 无配置
+ */
+async function loadCwwEnv(): Promise<{
+  cwwModelEnv: Record<string, string>;
+  cwwAccessToken: string;
+}> {
+  const cwwModelEnv: Record<string, string> = {};
+  let cwwAccessToken = '';
+
+  try {
+    // 读取 CWW access token
+    cwwAccessToken = (await getCwwToken()) ?? '';
+
+    // 读取 CWW 下发的模型配置
+    const modelConfig = await getCwwModelConfig();
+    if (modelConfig?.api_key) {
+      setCachedModelConfig(modelConfig);
+      const env = mapModelConfigToEnv(modelConfig);
+      // 只注入 providerEnv 中尚未设置的变量（用户手动配置优先）
+      for (const [key, value] of Object.entries(env)) {
+        if (!cwwModelEnv[key]) {
+          cwwModelEnv[key] = value;
+        }
+      }
+    }
+  } catch (err) {
+    logger.warn('加载 CWW 环境变量失败:', err);
+  }
+
+  return { cwwModelEnv, cwwAccessToken };
+}
+
 async function resolveChannelStartupPolicy(): Promise<{
   skipChannels: boolean;
   channelStartupSummary: string;
@@ -663,15 +701,22 @@ export async function prepareGatewayLaunchContext(port: number): Promise<Gateway
   const baseEnvPatched = binPathExists
     ? prependPathEntry(baseEnvRecord, binPath).env
     : baseEnvRecord;
+  // 加载 CWW 模型配置和 token（鲁南千易后端下发）
+  const { cwwModelEnv, cwwAccessToken } = await loadCwwEnv();
+
   const forkEnv: Record<string, string | undefined> = {
     ...stripSystemdSupervisorEnv(baseEnvPatched),
     ...providerEnv,
+    ...cwwModelEnv,
     ...uvEnv,
     ...proxyEnv,
     OPENCLAW_GATEWAY_TOKEN: appSettings.gatewayToken,
     OPENCLAW_SKIP_CHANNELS: skipChannels ? '1' : '',
     CLAWDBOT_SKIP_CHANNELS: skipChannels ? '1' : '',
     OPENCLAW_NO_RESPAWN: '1',
+    // CWW 环境变量（供插件读取凭证和后端地址）
+    ACCESS_TOKEN: cwwAccessToken || undefined,
+    CLAWWIN_SERVER_URL: CWW_CONFIG.API_BASE_URL ? CWW_CONFIG.API_BASE_URL.replace(/\/api\/v\d+\/?$/, '') : undefined,
     // Disable OpenClaw's interactive-shell env snapshot. When the Gateway runs
     // as an Electron utilityProcess, `process.execPath` is the Electron binary,
     // and OpenClaw captures the shell env by spawning `process.execPath -e

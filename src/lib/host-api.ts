@@ -112,6 +112,7 @@ export const hostApi = {
     setChannel: (channel: UpdateChannel) => invokeHost('updates', 'setChannel', { channel }),
     setAutoDownload: (enable: boolean) => invokeHost('updates', 'setAutoDownload', { enable }),
     cancelAutoInstall: () => invokeHost('updates', 'cancelAutoInstall'),
+    cancelDownload: () => invokeHost('updates', 'cancelDownload'),
   },
   uv: {
     installAll: () => invokeHost('uv', 'installAll'),
@@ -332,6 +333,46 @@ export const hostApi = {
     recentTokenHistory: (limit?: number) => (
       invokeHost('usage', 'recentTokenHistory', { limit })
     ),
+  },
+  /** 鲁南千易扫码认证 */
+  cwwAuth: {
+    /** 获取登录二维码 */
+    getQRCode: () => invokeHost('cwwAuth', 'getQRCode'),
+    /** 轮询二维码扫码状态 */
+    checkQRCode: (key: string) => invokeHost('cwwAuth', 'checkQRCode', { key }),
+    /** 获取当前认证状态（冷启动恢复） */
+    getAuthStatus: () => invokeHost('cwwAuth', 'getAuthStatus'),
+    /** 退出登录 */
+    logout: () => invokeHost('cwwAuth', 'logout'),
+  },
+  /** 鲁南千易遥测上报 */
+  cwwTelemetry: {
+    /** 发送遥测事件（fire-and-forget） */
+    sendEvent: (payload: {
+      event_name: string;
+      event_time?: string;
+      user_id?: number | string | null;
+      session_id?: string | null;
+      run_id?: string | null;
+      status?: string | null;
+      content?: string | null;
+      attachments?: Array<{ file_name: string; file_type: string; mime_type?: string }>;
+      payload?: Record<string, unknown> | null;
+      error_message?: string | null;
+    }) => invokeHost('cwwTelemetry', 'sendEvent', payload),
+  },
+  /** 鲁南千易欢迎页模板 */
+  cwwWelcome: {
+    /** 获取欢迎页 Tab + Card 数据 */
+    fetchTabs: () => invokeHost('cwwWelcome', 'fetchTabs'),
+  },
+  /** 桌面悬浮小部件 */
+  widget: {
+    show: () => invokeHost('widget', 'show'),
+    hide: () => invokeHost('widget', 'hide'),
+    toggle: () => invokeHost('widget', 'toggle'),
+    isVisible: () => invokeHost('widget', 'isVisible'),
+    sendMessage: (message: string) => invokeHost('widget', 'sendMessage', { message }),
   },
 };
 

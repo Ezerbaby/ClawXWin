@@ -4,6 +4,10 @@
             "title": "Welcome to ClawX",
             "description": "Your AI assistant is ready to be configured"
         },
+        "workspace": {
+            "title": "Choose Workspace",
+            "description": "Set the working directory for your AI assistant"
+        },
         "runtime": {
             "title": "Environment Check",
             "description": "Verifying system requirements"
@@ -119,6 +123,14 @@
         "gateway": "Gateway",
         "running": "Running",
         "footer": "You can customize skills and connect channels in Settings"
+    },
+    "workspace": {
+        "title": "Choose Workspace",
+        "description": "Select a working directory for your AI assistant. File operations and code projects will use this directory.",
+        "selectTitle": "Select workspace folder",
+        "placeholder": "Choose a folder path...",
+        "browse": "Browse",
+        "hint": "You can skip this step and configure it later in Settings."
     },
     "nav": {
         "next": "Next",

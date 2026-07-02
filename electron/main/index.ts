@@ -12,6 +12,7 @@ import { createMenu } from './menu';
 import { registerZoomShortcuts } from './zoom-shortcuts';
 
 import { appUpdater, registerUpdateHandlers } from './updater';
+import { cwwUpdateService } from '../services/cww-update-service';
 import { logger } from '../utils/logger';
 import { warmupNetworkOptimization } from '../utils/uv-env';
 import { initTelemetry } from '../utils/telemetry';
@@ -379,8 +380,16 @@ async function initialize(): Promise<void> {
     clawHubService.setMarketplaceProvider(marketplaceProvider);
   }
 
-  // Register update handlers
+  // 注册更新处理器
+  // 旧版 electron-updater IPC 处理器（保留兼容）
   registerUpdateHandlers(appUpdater, window);
+
+  // CWW 更新服务：将状态变更事件转发到渲染进程
+  cwwUpdateService.setOnStatusChange((snapshot) => {
+    if (window && !window.isDestroyed()) {
+      window.webContents.send('update:status-changed', snapshot);
+    }
+  });
 
   // Note: Auto-check for updates is driven by the renderer (update store init)
   // so it respects the user's "Auto-check for updates" setting.

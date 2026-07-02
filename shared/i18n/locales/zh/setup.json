@@ -4,6 +4,10 @@
             "title": "欢迎使用 ClawX",
             "description": "您的 AI 助手已准备好进行配置"
         },
+        "workspace": {
+            "title": "选择工作区",
+            "description": "设置 AI 助手的工作目录"
+        },
         "runtime": {
             "title": "环境检查",
             "description": "验证系统要求"
@@ -119,6 +123,14 @@
         "gateway": "网关",
         "running": "运行中",
         "footer": "您可以在设置中自定义技能并连接渠道"
+    },
+    "workspace": {
+        "title": "选择工作区",
+        "description": "选择 AI 助手的工作目录，文件操作和代码项目将在此目录下进行。",
+        "selectTitle": "选择工作区文件夹",
+        "placeholder": "选择文件夹路径...",
+        "browse": "浏览",
+        "hint": "可以跳过此步骤，稍后在设置中配置。"
     },
     "nav": {
         "next": "下一步",

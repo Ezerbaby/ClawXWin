@@ -41,7 +41,7 @@ import {
   syncUpdatedProviderToRuntime,
 } from '../services/providers/provider-runtime-sync';
 import { validateApiKeyWithProvider } from '../services/providers/provider-validation';
-import { appUpdater } from './updater';
+import { cwwUpdateService } from '../services/cww-update-service';
 import { GatewayRpcBackpressure } from '../gateway/rpc-backpressure';
 import { HostApiRegistry, registerHostInvokeHandler } from './ipc/host-invoke';
 import { createAppApi } from '../services/app-api';
@@ -64,6 +64,10 @@ import { createProvidersApi } from '../services/providers-api';
 import { createSessionsApi } from '../services/sessions-api';
 import { createSkillsApi } from '../services/skills-api';
 import { createUsageApi } from '../services/usage-api';
+import { createCwwAuthApi } from '../services/cww-auth-api';
+import { createCwwTelemetryApi } from '../services/cww-telemetry-api';
+import { createCwwWelcomeApi } from '../services/cww-welcome-api';
+import { createWidgetApi } from '../services/widget-api';
 import {
   isLaunchAtStartupKey,
   isProxyKey,
@@ -139,7 +143,7 @@ function registerTypedHostHandlers(
     shell: createShellApi(),
     dialog: createDialogApi(),
     window: createWindowApi(mainWindow),
-    updates: createUpdatesApi(appUpdater),
+    updates: createUpdatesApi(),
     uv: createUvApi(),
     settings: createSettingsApi(gatewayManager),
     gateway: createGatewayApi(gatewayManager, gatewayRpcBackpressure),
@@ -154,6 +158,10 @@ function registerTypedHostHandlers(
     cron: createCronApi({ gatewayManager }),
     skills: createSkillsApi({ clawHubService, gatewayManager }),
     usage: createUsageApi(),
+    cwwAuth: createCwwAuthApi(),
+    cwwTelemetry: createCwwTelemetryApi(),
+    cwwWelcome: createCwwWelcomeApi(),
+    widget: createWidgetApi({ getWidgetWindow: () => null }),
   });
   registerHostInvokeHandler(hostApiRegistry);
 }
@@ -446,54 +454,52 @@ function registerUnifiedRequestHandlers(gatewayManager: GatewayManager): void {
         }
         case 'update': {
           if (request.action === 'status') {
-            data = appUpdater.getStatus();
+            data = cwwUpdateService.getStatusSnapshot();
             break;
           }
           if (request.action === 'version') {
-            data = appUpdater.getCurrentVersion();
+            data = cwwUpdateService.getVersion();
             break;
           }
           if (request.action === 'check') {
             try {
-              await appUpdater.checkForUpdates();
-              data = { success: true, status: appUpdater.getStatus() };
+              const snapshot = await cwwUpdateService.checkForUpdate();
+              data = { success: true, status: snapshot };
             } catch (error) {
-              data = { success: false, error: String(error), status: appUpdater.getStatus() };
+              data = { success: false, error: String(error), status: cwwUpdateService.getStatusSnapshot() };
             }
             break;
           }
           if (request.action === 'download') {
             try {
-              await appUpdater.downloadUpdate();
-              data = { success: true };
+              const result = await cwwUpdateService.downloadUpdate();
+              data = result;
             } catch (error) {
               data = { success: false, error: String(error) };
             }
             break;
           }
           if (request.action === 'install') {
-            appUpdater.quitAndInstall();
-            data = { success: true };
+            data = cwwUpdateService.installUpdate();
             break;
           }
           if (request.action === 'setChannel') {
-            const payload = request.payload as { channel?: 'stable' | 'beta' | 'dev' } | 'stable' | 'beta' | 'dev' | undefined;
-            const channel = typeof payload === 'string' ? payload : payload?.channel;
-            if (!channel) throw new Error('Invalid update.setChannel payload');
-            appUpdater.setChannel(channel);
+            // CWW 更新服务不区分通道，保留为空操作
             data = { success: true };
             break;
           }
           if (request.action === 'setAutoDownload') {
-            const payload = request.payload as { enable?: boolean } | boolean | undefined;
-            const enable = typeof payload === 'boolean' ? payload : payload?.enable;
-            if (typeof enable !== 'boolean') throw new Error('Invalid update.setAutoDownload payload');
-            appUpdater.setAutoDownload(enable);
+            // CWW 更新服务始终手动触发，保留为空操作
             data = { success: true };
             break;
           }
           if (request.action === 'cancelAutoInstall') {
-            appUpdater.cancelAutoInstall();
+            // CWW 更新服务不使用自动安装倒计时，保留为空操作
+            data = { success: true };
+            break;
+          }
+          if (request.action === 'cancelDownload') {
+            cwwUpdateService.cancelDownload();
             data = { success: true };
             break;
           }

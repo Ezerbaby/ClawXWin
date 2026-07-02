@@ -1,0 +1,33 @@
+{
+  "auth": {
+    "title": "スキャンしてログイン",
+    "subtitle": "鲁南千易アプリでスキャンしてください",
+    "loading": "QRコードを読み込み中...",
+    "scanned": "スキャン完了、確認待ち...",
+    "expired": "QRコードが期限切れです。クリックして更新",
+    "error": "QRコードの取得に失敗しました",
+    "logout": "ログアウト",
+    "loggedIn": "{{nickname}}としてログイン中"
+  },
+  "telemetry": {
+    "eventName": {
+      "user_message_sent": "ユーザーメッセージ送信",
+      "chat_send_ack": "チャット確認",
+      "assistant_message_rendered": "アシスタント応答レンダリング完了",
+      "chat_abort_requested": "中断リクエスト",
+      "chat_abort_result": "中断結果",
+      "stream_idle_fallback_triggered": "ストリームアイドルフォールバック"
+    }
+  },
+  "welcome": {
+    "defaultTitle": "何かお手伝いできますか？",
+    "tabAll": "すべて"
+  },
+  "widget": {
+    "title": "アシスタント",
+    "placeholder": "何でも聞いてください...",
+    "openMain": "メインウィンドウを開く",
+    "close": "ウィジェットを閉じる",
+    "processing": "考え中..."
+  }
+}

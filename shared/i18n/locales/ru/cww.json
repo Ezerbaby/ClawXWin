@@ -1,0 +1,33 @@
+{
+  "auth": {
+    "title": "Вход по QR-коду",
+    "subtitle": "Отсканируйте в приложении LunanQianyi",
+    "loading": "Загрузка QR-кода...",
+    "scanned": "Отсканировано! Ожидание подтверждения...",
+    "expired": "QR-код устарел, нажмите для обновления",
+    "error": "Не удалось получить QR-код",
+    "logout": "Выйти",
+    "loggedIn": "Вошли как {{nickname}}"
+  },
+  "telemetry": {
+    "eventName": {
+      "user_message_sent": "Сообщение отправлено",
+      "chat_send_ack": "Чат подтверждён",
+      "assistant_message_rendered": "Ответ ассистента отображён",
+      "chat_abort_requested": "Запрос прерывания",
+      "chat_abort_result": "Результат прерывания",
+      "stream_idle_fallback_triggered": "Резервный режим потока"
+    }
+  },
+  "welcome": {
+    "defaultTitle": "Чем могу помочь?",
+    "tabAll": "Все"
+  },
+  "widget": {
+    "title": "Ассистент",
+    "placeholder": "Спросите что угодно...",
+    "openMain": "Открыть главное окно",
+    "close": "Закрыть виджет",
+    "processing": "Думаю..."
+  }
+}

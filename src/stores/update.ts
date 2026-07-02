@@ -1,6 +1,7 @@
 /**
- * Update State Store
- * Manages application update state
+ * 更新状态 Store
+ * 管理应用更新状态，适配 CWW 更新服务
+ * 新增 forceUpdate 状态和 cancelDownload 操作
  */
 import { create } from 'zustand';
 import { useSettingsStore } from './settings';
@@ -24,6 +25,8 @@ interface UpdateState {
   progress: ProgressInfo | null;
   error: string | null;
   isInitialized: boolean;
+  /** 是否为强制更新 */
+  forceUpdate: boolean;
   /** Seconds remaining before auto-install, or null if inactive. */
   autoInstallCountdown: number | null;
 
@@ -33,6 +36,7 @@ interface UpdateState {
   downloadUpdate: () => Promise<void>;
   installUpdate: () => void;
   cancelAutoInstall: () => Promise<void>;
+  cancelDownload: () => Promise<void>;
   setChannel: (channel: UpdateChannel) => Promise<void>;
   setAutoDownload: (enable: boolean) => Promise<void>;
   clearError: () => void;
@@ -47,6 +51,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   progress: null,
   error: null,
   isInitialized: false,
+  forceUpdate: false,
   autoInstallCountdown: null,
 
   init: async () => {
@@ -54,15 +59,15 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     if (updateInitPromise) return updateInitPromise;
 
     updateInitPromise = (async () => {
-      // Get current version
+      // 获取当前版本号
       try {
         const version = await hostApi.updates.version();
         set({ currentVersion: version });
       } catch (error) {
-        console.error('Failed to get version:', error);
+        console.error('获取版本号失败:', error);
       }
 
-      // Get current status
+      // 获取当前更新状态
       try {
         const status = await hostApi.updates.status();
         set({
@@ -70,20 +75,22 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
           updateInfo: status.info || null,
           progress: status.progress || null,
           error: status.error || null,
+          forceUpdate: status.status === 'force-update',
         });
       } catch (error) {
-        console.error('Failed to get update status:', error);
+        console.error('获取更新状态失败:', error);
       }
 
-      // Listen for update events
-      // Single source of truth: listen only to update:status-changed
-      // (sent by AppUpdater.updateStatus() in the main process)
+      // 监听更新事件
+      // 唯一数据源：仅监听 update:status-changed
+      // （由主进程 CwwUpdateService 的 onStatusChange 回调发送）
       hostEvents.onUpdateStatusChanged((status) => {
         set({
           status: status.status,
           updateInfo: status.info || null,
           progress: status.progress || null,
           error: status.error || null,
+          forceUpdate: status.status === 'force-update',
         });
       });
 
@@ -91,13 +98,12 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
         set({ autoInstallCountdown: cancelled ? null : seconds });
       });
 
-      // New default is prompt-first: never auto-download/install unless the
-      // user explicitly chooses Download from the notification or Settings.
+      // 默认提示优先：除非用户主动点击下载，否则不自动下载/安装
       void hostApi.updates.setAutoDownload(false).catch(() => {});
 
       set({ isInitialized: true });
 
-      // Auto-check for updates on startup (respects user toggle)
+      // 启动时自动检查更新（遵循用户开关）
       const autoCheckUpdate = useSettingsStore.getState().autoCheckUpdate;
       if (autoCheckUpdate) {
         setTimeout(() => {
@@ -121,7 +127,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     try {
       const result = await Promise.race([
         hostApi.updates.check(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Update check timed out')), 30000))
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('更新检查超时')), 30000))
       ]);
       
       if (result.status) {
@@ -130,18 +136,21 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
           updateInfo: result.status.info || null,
           progress: result.status.progress || null,
           error: result.status.error || null,
+          forceUpdate: result.status.status === 'force-update',
         });
       } else if (!result.success) {
-        set({ status: 'error', error: result.error || 'Failed to check for updates' });
+        set({ status: 'error', error: result.error || '检查更新失败' });
       }
     } catch (error) {
       set({ status: 'error', error: String(error) });
     } finally {
-      // In dev mode autoUpdater skips without emitting events, so the
-      // status may still be 'checking' or even 'idle'. Catch both.
+      // 开发模式下更新服务可能跳过检查而不发送事件，兜底处理
       const currentStatus = get().status;
       if (currentStatus === 'checking' || currentStatus === 'idle') {
-        set({ status: 'error', error: 'Update check completed without a result. This usually means the app is running in dev mode.' });
+        set({
+          status: 'error',
+          error: '更新检查未返回结果，通常表示应用运行在开发模式下或 CWW 更新服务地址未配置。',
+        });
       }
     }
   },
@@ -153,7 +162,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
       const result = await hostApi.updates.download();
       
       if (!result.success) {
-        set({ status: 'error', error: result.error || 'Failed to download update' });
+        set({ status: 'error', error: result.error || '下载更新失败' });
       }
     } catch (error) {
       set({ status: 'error', error: String(error) });
@@ -168,7 +177,17 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     try {
       await hostApi.updates.cancelAutoInstall();
     } catch (error) {
-      console.error('Failed to cancel auto-install:', error);
+      console.error('取消自动安装失败:', error);
+    }
+  },
+
+  cancelDownload: async () => {
+    try {
+      await hostApi.updates.cancelDownload();
+      // 取消后重置到空闲状态
+      set({ status: 'idle', progress: null });
+    } catch (error) {
+      console.error('取消下载失败:', error);
     }
   },
 
@@ -176,21 +195,20 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     try {
       await hostApi.updates.setChannel(channel);
     } catch (error) {
-      console.error('Failed to set update channel:', error);
+      console.error('设置更新通道失败:', error);
     }
   },
 
   setAutoDownload: async (enable) => {
     try {
-      // Compatibility shim for older UI paths: the updater is now prompt-first,
-      // so we keep electron-updater.autoDownload disabled even if a stale
-      // persisted setting says otherwise.
+      // 兼容旧 UI 路径：更新服务现为提示优先模式，
+      // 即使旧的持久化设置要求自动下载也保持禁用
       await hostApi.updates.setAutoDownload(false);
       if (enable) {
-        console.info('[Update] Auto-download preference ignored; update prompts are shown instead.');
+        console.info('[Update] 自动下载偏好已忽略；改为显示更新提示。');
       }
     } catch (error) {
-      console.error('Failed to set auto-download:', error);
+      console.error('设置自动下载失败:', error);
     }
   },
 
